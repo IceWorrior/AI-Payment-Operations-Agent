@@ -130,19 +130,31 @@ public class Router {
 
     private void handleCreatePayment(HttpExchange exchange) throws IOException{
         
-        String requestBody = new String(exchange.getRequestBody().readAllBytes());
+        try{
+            String requestBody = new String(exchange.getRequestBody().readAllBytes());
 
-        PaymentRequest request = JsonUtil.fromJson(
-            requestBody,
-            PaymentRequest.class
-        );
+            PaymentRequest request = JsonUtil.fromJson(
+                requestBody,
+                PaymentRequest.class
+            );
 
-        Payment payment = paymentController.createPayment(request);
+            Payment payment = paymentController.createPayment(request);
 
-        sendResponse(
-            exchange,
-            201,
-            JsonUtil.toJson(payment)
-        );
+            sendResponse(
+                exchange,
+                201,
+                JsonUtil.toJson(payment)
+            );
+        }
+        catch(IllegalArgumentException e){
+            
+            String response = "{\"error\":\"" + e.getMessage() + "\"}";
+
+            sendResponse(
+                exchange,
+                400,
+                response
+            );
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.paymentagent.service;
 import com.paymentagent.model.Payment;
 import com.paymentagent.repository.PaymentRepository;
 import com.paymentagent.model.PaymentRequest;
+import com.paymentagent.validation.PaymentValidator;
 
 import java.util.List;
 
@@ -25,6 +26,12 @@ public class PaymentService{
     }
 
     public Payment createPayment(PaymentRequest request){
+
+        String validationError = PaymentValidator.validate(request);
+
+        if(validationError != null){
+            throw new IllegalArgumentException(validationError);
+        }
 
         String id = "PAY" + String.format(
             "%03d",
