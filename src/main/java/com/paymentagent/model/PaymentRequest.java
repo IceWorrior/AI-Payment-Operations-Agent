@@ -33,4 +33,6 @@ public class PaymentRequest{
     public void setPaymentMethod(String paymentMethod){
         this.paymentMethod = paymentMethod;
     }
+
+
 }

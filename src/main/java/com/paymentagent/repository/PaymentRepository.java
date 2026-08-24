@@ -58,4 +58,9 @@ public class PaymentRepository{
         
         return null;
     }
+
+    public Payment save(Payment payment){
+        payments.add(payment);
+        return payment;
+    }
 }

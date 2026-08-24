@@ -19,4 +19,18 @@ public class JsonUtil{
             throw new RuntimeException("Failed to convert object to json", e);
         }
     }
+
+    public static <T> T fromJson(String json, Class<T> type){
+
+        try{
+            return mapper.readValue(json,type);
+        }
+        catch(JsonProcessingException e){
+
+            throw new RuntimeException(
+                "Failed to convert JSON to object",
+                e
+            );
+        }
+    }
 }

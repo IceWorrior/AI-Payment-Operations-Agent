@@ -4,6 +4,7 @@ import com.paymentagent.controller.PaymentController;
 import com.paymentagent.model.Payment;
 import com.paymentagent.util.JsonUtil;
 import com.sun.net.httpserver.HttpExchange;
+import com.paymentagent.model.PaymentRequest;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,24 +35,33 @@ public class Router {
     private void handlePayments(HttpExchange exchange)
             throws IOException {
 
-        if (!exchange.getRequestMethod().equals("GET")) {
+        String method = exchange.getRequestMethod();
+
+        if (method.equals("GET")) {
+
+            List<Payment> payments =
+                    paymentController.getPayments();
 
             sendResponse(
                     exchange,
-                    405,
-                    "{\"error\":\"Method not allowed\"}"
+                    200,
+                    JsonUtil.toJson(payments)
             );
 
             return;
         }
 
-        List<Payment> payments =
-                paymentController.getPayments();
+        if (method.equals("POST")) {
+
+            handleCreatePayment(exchange);
+
+            return;
+        }
 
         sendResponse(
                 exchange,
-                200,
-                JsonUtil.toJson(payments)
+                405,
+                "{\"error\":\"Method not allowed\"}"
         );
     }
 
@@ -116,5 +126,23 @@ public class Router {
                 .write(responseBytes);
 
         exchange.close();
+    }
+
+    private void handleCreatePayment(HttpExchange exchange) throws IOException{
+        
+        String requestBody = new String(exchange.getRequestBody().readAllBytes());
+
+        PaymentRequest request = JsonUtil.fromJson(
+            requestBody,
+            PaymentRequest.class
+        );
+
+        Payment payment = paymentController.createPayment(request);
+
+        sendResponse(
+            exchange,
+            201,
+            JsonUtil.toJson(payment)
+        );
     }
 }
