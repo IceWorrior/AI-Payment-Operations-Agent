@@ -9,72 +9,77 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class OllamaClient{
+public class OllamaClient {
 
-    private static final String OLLAMA_URL = "http://localhost:11434/api/generate";
+    private static final String OLLAMA_URL =
+            "http://localhost:11434/api/generate";
 
-    private static final String MODEL = "qwen3.5:9b";
+    private static final String MODEL =
+            "qwen3.5:9b";
+
+    private static final ObjectMapper mapper =
+            new ObjectMapper();
 
     private final HttpClient client;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    public OllamaClient(){
+    public OllamaClient() {
 
         client = HttpClient.newHttpClient();
     }
 
-    public String generate(String prompt) throws 
-    IOException, InterruptedException{
+    public String generate(String prompt)
+            throws IOException, InterruptedException {
 
-        String json = "{"
+        String requestJson =
+                "{"
                 + "\"model\":\"" + MODEL + "\","
                 + "\"prompt\":\"" + escapeJson(prompt) + "\","
                 + "\"stream\":false"
                 + "}";
-        
-        HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create(OLLAMA_URL))
-                            .header(
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(OLLAMA_URL))
+                        .header(
                                 "Content-Type",
                                 "application/json"
-                            )
-                            .POST(
-                                HttpRequest.BodyPublishers.ofString(json)
-                            )
-                            .build();
-    
-        HttpResponse<String> response = client.send(
-                                            request,
-                                            HttpResponse.BodyHandlers.ofString()
-                                        );
+                        )
+                        .POST(
+                                HttpRequest.BodyPublishers
+                                        .ofString(requestJson)
+                        )
+                        .build();
 
-        try{
+        HttpResponse<String> response =
+                client.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofString()
+                );
 
-            JsonNode json = mapper.readTree(response.body());
+        try {
 
-            return json
+            JsonNode responseJson =
+                    mapper.readTree(response.body());
+
+            return responseJson
                     .get("response")
                     .asText();
 
-        }
-        catch(Exception e){
+        } catch (Exception e) {
 
             throw new RuntimeException(
-                "Failed to parse ollama response",
-                e
+                    "Failed to parse Ollama response",
+                    e
             );
         }
-
     }
 
-    private String escapeJson(String text){
+    private String escapeJson(String text) {
 
         return text
-                .replace("\\","\\\\")
-                .replace("\"","\\\"")
-                .replace("\n","\\n")
-                .replace("\r","\\r");
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
-
 }
