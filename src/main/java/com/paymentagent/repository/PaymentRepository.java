@@ -29,7 +29,6 @@ public class PaymentRepository {
         ) {
 
             while (result.next()) {
-
                 payments.add(mapPayment(result));
             }
 
@@ -62,7 +61,6 @@ public class PaymentRepository {
             try (ResultSet result = statement.executeQuery()) {
 
                 if (result.next()) {
-
                     return mapPayment(result);
                 }
             }
@@ -108,6 +106,79 @@ public class PaymentRepository {
                     e
             );
         }
+    }
+
+    public List<Payment> findByFilters(
+            String status,
+            String paymentMethod,
+            Double minAmount,
+            Double maxAmount) {
+
+        List<Payment> payments = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, amount, currency, status, payment_method " +
+                "FROM payments WHERE 1=1"
+        );
+
+        List<Object> parameters = new ArrayList<>();
+
+        if (status != null && !status.isBlank()) {
+
+            sql.append(" AND status = ?");
+            parameters.add(status);
+        }
+
+        if (paymentMethod != null && !paymentMethod.isBlank()) {
+
+            sql.append(" AND payment_method = ?");
+            parameters.add(paymentMethod);
+        }
+
+        if (minAmount != null) {
+
+            sql.append(" AND amount >= ?");
+            parameters.add(minAmount);
+        }
+
+        if (maxAmount != null) {
+
+            sql.append(" AND amount <= ?");
+            parameters.add(maxAmount);
+        }
+
+        sql.append(" ORDER BY created_at DESC");
+
+        try (
+                Connection connection = Database.getConnection();
+                PreparedStatement statement =
+                        connection.prepareStatement(sql.toString())
+        ) {
+
+            for (int i = 0; i < parameters.size(); i++) {
+
+                statement.setObject(
+                        i + 1,
+                        parameters.get(i)
+                );
+            }
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    payments.add(mapPayment(result));
+                }
+            }
+
+        } catch (SQLException e) {
+
+            throw new RuntimeException(
+                    "Failed to filter payments",
+                    e
+            );
+        }
+
+        return payments;
     }
 
     private Payment mapPayment(ResultSet result)

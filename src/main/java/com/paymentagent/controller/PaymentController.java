@@ -26,4 +26,19 @@ public class PaymentController{
     public Payment createPayment(PaymentRequest request){
         return paymentService.createPayment(request);
     }
+
+    public List<Payment> filterPayments(
+        String status,
+        String paymentMethod,
+        Double minAmount,
+        Double maxAmount
+    ){
+
+        return paymentService.filterPayments(
+            status,
+            paymentMethod,
+            minAmount,
+            maxAmount
+        );
+    }
 }
