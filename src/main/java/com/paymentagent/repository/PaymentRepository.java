@@ -2,6 +2,7 @@ package com.paymentagent.repository;
 
 import com.paymentagent.database.Database;
 import com.paymentagent.model.Payment;
+import com.paymentagent.model.PaymentStats;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -192,4 +193,79 @@ public class PaymentRepository {
                 result.getString("payment_method")
         );
     }
+
+    public PaymentStats getStats(){
+
+        String sql = 
+            "SELECT " +
+            "COUNT(*) AS total_payments, " +
+            "COUNT(*) FILTER (WHERE status = 'SUCCESS') AS successful_payments, " +
+            "COUNT(*) FILTER (WHERE status = 'FAILED') AS failed_payments, " +
+            "COUNT(*) FILTER (WHERE status = 'PENDING') AS pending_payments, " +
+            "COALESCE(SUM(amount), 0) AS total_amount, " +
+            "COALESCE(SUM(amount) FILTER (WHERE status = 'FAILED'), 0) AS failed_amount " +
+            "FROM payments";
+
+        try(
+            Connection connection = Database.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet result = statement.executeQuery();
+        ){
+
+            if(result.next()){
+
+                int totalPayments = result.getInt("total_payments");
+
+                int successfulPayments = result.getInt("successful_payments");
+
+                int failedPayments = result.getInt("failed_payments");
+
+                int pendingPayments = result.getInt("pending_payments");
+
+                double totalAmount = result.getDouble("total_amount");
+
+                double failedAmount = result.getDouble("failed_amount");
+
+                double failureRate = 0;
+
+                if(totalPayments > 0 ){
+
+                    failureRate = ((double)
+                        failedPayments/totalPayments) * 100;
+
+                }
+
+                return new PaymentStats(
+                    totalPayments,
+                    successfulPayments,
+                    failedPayments,
+                    pendingPayments,
+                    totalAmount,
+                    failedAmount,
+                    failureRate
+                );
+
+            }
+
+        }
+        catch (SQLException e){
+
+            throw new RuntimeException(
+                "Failed to calculate payment statistics",
+                e
+            );
+
+        }
+
+        return new PaymentStats(
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+    }
+
 }

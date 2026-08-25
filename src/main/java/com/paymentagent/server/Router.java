@@ -5,6 +5,7 @@ import com.paymentagent.model.Payment;
 import com.paymentagent.model.PaymentRequest;
 import com.paymentagent.util.JsonUtil;
 import com.sun.net.httpserver.HttpExchange;
+import com.paymentagent.model.PaymentStats;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +28,11 @@ public class Router {
         );
 
         server.createContext(
+            "/api/payments/stats",
+            this::handlePaymentStats
+        );
+
+        server.createContext(
                 "/api/payments",
                 this::handlePayments
         );
@@ -35,6 +41,7 @@ public class Router {
                 "/api/payments/",
                 this::handlePaymentById
         );
+
     }
 
     private void handlePayments(
@@ -264,5 +271,29 @@ public class Router {
                 .write(responseBytes);
 
         exchange.close();
+    }
+
+    private void handlePaymentStats(
+        HttpExchange exchange
+    ) throws IOException{
+
+        if(!exchange.getRequestMethod().equals("GET")){
+
+            sendResponse(
+                exchange,
+                405,
+                "{\"error\":\"Method not allowed\"}"
+            );
+            return;
+        }
+
+        PaymentStats stats = paymentController.getStats();
+
+        sendResponse(
+            exchange,
+            200,
+            JsonUtil.toJson(stats)
+        );
+
     }
 }

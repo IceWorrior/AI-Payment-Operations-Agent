@@ -3,6 +3,7 @@ package com.paymentagent.controller;
 import com.paymentagent.model.Payment;
 import com.paymentagent.service.PaymentService;
 import com.paymentagent.model.PaymentRequest;
+import com.paymentagent.model.PaymentStats;
 
 import java.util.List;
 
@@ -40,5 +41,9 @@ public class PaymentController{
             minAmount,
             maxAmount
         );
+    }
+
+    public PaymentStats getStats(){
+        return paymentService.getStats();
     }
 }
