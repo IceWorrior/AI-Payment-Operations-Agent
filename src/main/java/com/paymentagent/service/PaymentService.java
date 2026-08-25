@@ -6,6 +6,7 @@ import com.paymentagent.model.PaymentRequest;
 import com.paymentagent.validation.PaymentValidator;
 
 import java.util.List;
+import java.util.UUID;
 
 public class PaymentService{
 
@@ -33,10 +34,11 @@ public class PaymentService{
             throw new IllegalArgumentException(validationError);
         }
 
-        String id = "PAY" + String.format(
-            "%03d",
-            paymentRepository.findAll().size() + 1
-        );
+        String id = "PAY-" +
+            UUID.randomUUID()
+                    .toString()
+                    .substring(0, 8)
+                    .toUpperCase();
 
         Payment payment = new Payment(
             id,
