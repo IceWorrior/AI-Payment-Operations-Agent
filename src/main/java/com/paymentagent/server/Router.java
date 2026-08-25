@@ -6,6 +6,8 @@ import com.paymentagent.model.PaymentRequest;
 import com.paymentagent.util.JsonUtil;
 import com.sun.net.httpserver.HttpExchange;
 import com.paymentagent.model.PaymentStats;
+import com.paymentagent.model.RiskAnalysis;
+import com.paymentagent.service.RiskService;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,10 +15,12 @@ import java.util.List;
 public class Router {
 
     private final PaymentController paymentController;
+    private final RiskService riskService;
 
     public Router() {
 
         paymentController = new PaymentController();
+        riskService = new RiskService();
     }
 
     public void registerRoutes(
@@ -30,6 +34,11 @@ public class Router {
         server.createContext(
             "/api/payments/stats",
             this::handlePaymentStats
+        );
+
+        server.createContext(
+            "/api/payments/risk",
+            this::handleRiskAnalysis
         );
 
         server.createContext(
@@ -293,6 +302,32 @@ public class Router {
             exchange,
             200,
             JsonUtil.toJson(stats)
+        );
+
+    }
+
+    private void handleRiskAnalysis(
+        HttpExchange exchange
+    ) throws IOException{
+
+        if(!exchange.getRequestMethod().equals("GET")){
+
+            sendResponse(
+                exchange,
+                405,
+                "{\"erro\":\"Method not allowed\"}"
+            );
+
+            return;
+
+        }
+
+        RiskAnalysis analysis = riskService.analyzeRisk();
+
+        sendResponse(
+            exchange,
+            200,
+            JsonUtil.toJson(analysis)
         );
 
     }
