@@ -1,5 +1,8 @@
 package com.paymentagent.ai;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,6 +16,8 @@ public class OllamaClient{
     private static final String MODEL = "qwen3.5:9b";
 
     private final HttpClient client;
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public OllamaClient(){
 
@@ -44,7 +49,22 @@ public class OllamaClient{
                                             HttpResponse.BodyHandlers.ofString()
                                         );
 
-        return response.body();
+        try{
+
+            JsonNode json = mapper.readTree(response.body());
+
+            return json
+                    .get("response")
+                    .asText();
+
+        }
+        catch(Exception e){
+
+            throw new RuntimeException(
+                "Failed to parse ollama response",
+                e
+            );
+        }
 
     }
 
