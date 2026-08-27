@@ -2,22 +2,16 @@ package com.paymentagent.ai;
 
 import com.paymentagent.model.Payment;
 import com.paymentagent.model.PaymentStats;
-import com.paymentagent.model.RiskAnalysis;
 import com.paymentagent.service.PaymentService;
-import com.paymentagent.service.RiskService;
 
 import java.util.List;
 
 public class PaymentTools{
 
     private final PaymentService paymentService;
-    private final RiskService riskService;
-
-    public PaymentTools(){
-
-        paymentService = new PaymentService();
-        riskService = new RiskService();
-
+    
+    public PaymentTools(PaymentService paymentService){
+        this.paymentService = paymentService;
     }
 
     public List<Payment> getPayments(){
@@ -33,19 +27,14 @@ public class PaymentTools{
 
         return paymentService.filterPayments(
             status,
-            paymentMethod,
-            minAmount,
+            paymentMethod, 
+            minAmount, 
             maxAmount
         );
-
     }
 
-    public PaymentStats getPaymentStats(){
+    public Object getPaymentStats(){
         return paymentService.getStats();
-    }
-
-    public RiskAnalysis analyzePaymentRisk(){
-        return riskService.analyzeRisk();
     }
 
 }
