@@ -8,18 +8,28 @@ import com.sun.net.httpserver.HttpExchange;
 import com.paymentagent.model.PaymentStats;
 import com.paymentagent.model.RiskAnalysis;
 import com.paymentagent.service.RiskService;
+import com.paymentagent.ai.OllamaClient;
+import com.paymentagent.ai.PaymentAgent;
+import com.paymentagent.service.PaymentService;
 
 import java.io.IOException;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Router {
 
     private final PaymentController paymentController;
+    private final PaymentAgent paymentAgent;
     private final RiskService riskService;
 
     public Router() {
 
         paymentController = new PaymentController();
+        paymentAgent = new PaymentAgent(
+                new OllamaClient(),
+                new PaymentService()
+                );
         riskService = new RiskService();
     }
 
@@ -49,6 +59,11 @@ public class Router {
         server.createContext(
                 "/api/payments/",
                 this::handlePaymentById
+        );
+
+        server.createContext(
+        "/api/ai",
+        this::handleAI
         );
 
     }
@@ -328,6 +343,36 @@ public class Router {
             exchange,
             200,
             JsonUtil.toJson(analysis)
+        );
+
+    }
+
+    private void handleAI(HttpExchange exchange) throws IOException{
+
+        if(!exchange.getRequestMethod().equalsIgnoreCase("POST")){
+
+                sendResponse(
+                        exchange,
+                        405,
+                        "{\"error:\":\"Method not allowed\"}"
+                );
+
+                return;
+        }
+
+        String body = new String(
+                exchange.getRequestBody().readAllBytes()
+        );
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode json = mapper.readTree(body);
+        String question = json.get("question").asText();
+        String result = paymentAgent.ask(question);
+
+        sendResponse(
+                exchange,
+                200,
+                result
         );
 
     }
