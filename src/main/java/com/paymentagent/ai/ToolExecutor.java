@@ -36,6 +36,9 @@ public class ToolExecutor {
             case "get_payment_stats":
                     return tools.getPaymentStats();
             
+            case "get_payment_method_stats":
+                    return tools.getPaymentMethodStats();
+            
             default:
                 throw new IllegalArgumentException(
                     "Unknow tool: " + toolName

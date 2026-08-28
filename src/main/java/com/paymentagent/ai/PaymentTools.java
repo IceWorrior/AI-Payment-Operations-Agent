@@ -3,6 +3,7 @@ package com.paymentagent.ai;
 import com.paymentagent.model.Payment;
 import com.paymentagent.model.PaymentStats;
 import com.paymentagent.service.PaymentService;
+import com.paymentagent.model.PaymentMethodStats;
 
 import java.util.List;
 
@@ -35,6 +36,10 @@ public class PaymentTools{
 
     public Object getPaymentStats(){
         return paymentService.getStats();
+    }
+
+    public List<PaymentMethodStats> getPaymentMethodStats(){
+        return paymentService.getPaymentMethodStats();
     }
 
 }
