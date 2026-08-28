@@ -2,6 +2,7 @@ package com.paymentagent.repository;
 
 import com.paymentagent.database.Database;
 import com.paymentagent.model.Payment;
+import com.paymentagent.model.PaymentMethodStats;
 import com.paymentagent.model.PaymentStats;
 
 import java.sql.Connection;
@@ -266,6 +267,53 @@ public class PaymentRepository {
             0,
             0
         );
+    }
+
+    public List<PaymentMethodStats> getPaymentMethodStats(){
+
+        List<PaymentMethodStats> stats = new ArrayList<>();
+
+        String sql = "SELECT payment_method, " +
+            "COUNT(*) AS total_payments, " +
+            "COUNT(*) FILTER (WHERE status = 'SUCCESS') AS successful_payments, " +
+            "COUNT(*) FILTER (WHERE status = 'FAILED') AS failed_payments, " +
+            "COALESCE(SUM(amount), 0) AS total_amount, " +
+            "COALESCE(SUM(amount) FILTER (WHERE status = 'FAILED'), 0) AS failed_amount " +
+            "FROM payments " +
+            "GROUP BY payment_method " +
+            "ORDER BY failed_payments DESC";
+        
+        try (
+            Connection connection = Database.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet result = statement.executeQuery();
+        ){
+
+            while(result.next()){
+
+                stats.add(
+                    new PaymentMethodStats(
+                        result.getString("payment_method"),
+                        result.getInt("total_payments"),
+                        result.getInt("successful_payments"),
+                        result.getInt("failed_payments"),
+                        result.getDouble("total_amount"),
+                        result.getDouble("failed_amount")
+                    )
+                );
+            }
+
+        }
+        catch(Exception e){
+
+            throw new RuntimeException(
+                "Failed to calculate payment method statistics",
+                e
+            );
+        }
+
+        return stats;
+
     }
 
 }

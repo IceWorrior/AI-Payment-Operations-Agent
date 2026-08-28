@@ -5,6 +5,7 @@ import com.paymentagent.model.PaymentRequest;
 import com.paymentagent.repository.PaymentRepository;
 import com.paymentagent.validation.PaymentValidator;
 import com.paymentagent.model.PaymentStats;
+import com.paymentagent.model.PaymentMethodStats;
 
 import java.util.List;
 import java.util.UUID;
@@ -75,4 +76,9 @@ public class PaymentService {
     public PaymentStats getStats(){
         return paymentRepository.getStats();
     }
+
+    public List<PaymentMethodStats> getPaymentMethodStats(){
+        return paymentRepository.getPaymentMethodStats();
+    }
+
 }
