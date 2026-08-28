@@ -26,50 +26,56 @@ public class PaymentAgent {
     public String ask(String question) {
 
         String prompt = """
-                You are an AI Payment Operations Agent.
+                                You are an AI Payment Operations Agent.
 
-                You can use these tools:
+                                You can use these tools:
 
-                get_payments
-                - Get all payments.
+                                get_payments
+                                - Get all payments.
 
-                filter_payments
-                - Filter payments by status, payment method,
-                  minimum amount, or maximum amount.
+                                filter_payments
+                                - Filter payments by status, payment method,
+                                  minimum amount, or maximum amount.
 
-                get_payment_stats
-                - Get payment statistics.
+                                get_payment_stats
+                                - Get payment statistics.
 
-                Return ONLY valid JSON.
-                Do not use markdown.
-                Do not explain anything.
+                                get_payment_method_stats
+                                - Get payment statistics grouped by payment method.
+                                - Use this when the user asks about failures, success,
+                                  amounts, or performance of specific payment methods.
 
-                JSON format:
+                                Return ONLY valid JSON.
+                                Do not use markdown.
+                                Do not explain anything.
 
-                {
-                  "tool": "get_payments",
-                  "status": null,
-                  "paymentMethod": null,
-                  "minAmount": null,
-                  "maxAmount": null
-                }
+                                JSON format:
 
-                Rules:
+                                {
+                                  "tool": "get_payments",
+                                  "status": null,
+                                  "paymentMethod": null,
+                                  "minAmount": null,
+                                  "maxAmount": null
+                                }
 
-                - Use get_payments when the user wants a list of payments.
-                - Use filter_payments when the user specifies filters.
-                - Use get_payment_stats when the user asks for statistics.
-                - Use null for filters that were not specified.
-                - Use the conversation history to understand follow-up questions.
-                - If the user adds a filter to the previous request, preserve
-                  the previous filters unless the user changes them.
+                                Rules:
 
-                Conversation history:
-                %s
+                                - Use get_payments when the user wants a list of payments.
+                                - Use filter_payments when the user specifies filters.
+                                - Use get_payment_stats when the user asks for statistics.
+                                - Use get_payment_method_stats when the user asks to compare or analyze payment methods.
+                                - Use null for filters that were not specified.
+                                - Use the conversation history to understand follow-up questions.
+                                - If the user adds a filter to the previous request, preserve
+                                  the previous filters unless the user changes them.
 
-                Current user question:
-                %s
-                """.formatted(
+                                Conversation history:
+                                %s
+
+                                Current user question:
+                                %s
+                                """.formatted(
                 conversationHistory,
                 question);
 
@@ -88,7 +94,7 @@ public class PaymentAgent {
 
             String resultJson = mapper.writeValueAsString(result);
             conversationHistory += "User: " + question + "\n" +
-                                    "Result: " + resultJson + "\n";
+                    "Result: " + resultJson + "\n";
 
             String answerPrompt = """
                     You are an AI Payment Operations Agent.
