@@ -7,6 +7,8 @@ public class ToolCall {
     private String paymentMethod;
     private Double minAmount;
     private Double maxAmount;
+    private boolean needsAnotherTool;
+    private String nextQuestion;
 
     public ToolCall(){
 
@@ -50,6 +52,22 @@ public class ToolCall {
 
     public void setMaxAmount(Double maxAmount){
         this.maxAmount = maxAmount;
+    }
+
+    public boolean isNeedsAnotherTool(){
+        return needsAnotherTool;
+    }
+
+    public void setNeedsAnotherTool(boolean needsAnotherTool){
+        this.needsAnotherTool = needsAnotherTool;
+    }
+
+    public String getNextQuestion(){
+        return nextQuestion;
+    }
+
+    public void setNextQuestion(String nexQuestion){
+        this.nextQuestion = nextQuestion;
     }
 
 }

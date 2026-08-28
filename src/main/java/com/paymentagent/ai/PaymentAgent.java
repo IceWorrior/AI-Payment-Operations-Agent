@@ -10,110 +10,198 @@ public class PaymentAgent {
     private final OllamaClient ollama;
     private final ToolExecutor executor;
     private final ObjectMapper mapper;
+
     private String conversationHistory = "";
 
     public PaymentAgent(
             OllamaClient ollama,
             PaymentService paymentService) {
+
         this.ollama = ollama;
 
-        PaymentTools tools = new PaymentTools(paymentService);
+        PaymentTools tools =
+                new PaymentTools(paymentService);
 
-        this.executor = new ToolExecutor(tools);
-        this.mapper = new ObjectMapper();
+        this.executor =
+                new ToolExecutor(tools);
+
+        this.mapper =
+                new ObjectMapper();
     }
 
     public String ask(String question) {
 
-        String prompt = """
-                                You are an AI Payment Operations Agent.
-
-                                You can use these tools:
-
-                                get_payments
-                                - Get all payments.
-
-                                filter_payments
-                                - Filter payments by status, payment method,
-                                  minimum amount, or maximum amount.
-
-                                get_payment_stats
-                                - Get payment statistics.
-
-                                get_payment_method_stats
-                                - Get payment statistics grouped by payment method.
-                                - Use this when the user asks about failures, success,
-                                  amounts, or performance of specific payment methods.
-
-                                Return ONLY valid JSON.
-                                Do not use markdown.
-                                Do not explain anything.
-
-                                JSON format:
-
-                                {
-                                  "tool": "get_payments",
-                                  "status": null,
-                                  "paymentMethod": null,
-                                  "minAmount": null,
-                                  "maxAmount": null
-                                }
-
-                                Rules:
-
-                                - Use get_payments when the user wants a list of payments.
-                                - Use filter_payments when the user specifies filters.
-                                - Use get_payment_stats when the user asks for statistics.
-                                - Use get_payment_method_stats when the user asks to compare or analyze payment methods.
-                                - Use null for filters that were not specified.
-                                - Use the conversation history to understand follow-up questions.
-                                - If the user adds a filter to the previous request, preserve
-                                  the previous filters unless the user changes them.
-
-                                Conversation history:
-                                %s
-
-                                Current user question:
-                                %s
-                                """.formatted(
-                conversationHistory,
-                question);
-
         try {
 
-            String response = ollama.generate(prompt);
+            String prompt = """
+                    You are an AI Payment Operations Agent.
 
-            ToolCall toolCall = mapper.readValue(response, ToolCall.class);
+                    Available tools:
 
-            Object result = executor.execute(
-                    toolCall.getTool(),
-                    toolCall.getStatus(),
-                    toolCall.getPaymentMethod(),
-                    toolCall.getMinAmount(),
-                    toolCall.getMaxAmount());
+                    get_payments
+                    - Get all payments.
 
-            String resultJson = mapper.writeValueAsString(result);
-            conversationHistory += "User: " + question + "\n" +
-                    "Result: " + resultJson + "\n";
+                    filter_payments
+                    - Filter payments by status, payment method,
+                      minimum amount, or maximum amount.
+
+                    get_payment_stats
+                    - Get overall payment statistics.
+
+                    get_payment_method_stats
+                    - Get statistics grouped by payment method.
+
+                    Return ONLY valid JSON.
+
+                    JSON format:
+
+                    {
+                      "tool": "get_payments",
+                      "status": null,
+                      "paymentMethod": null,
+                      "minAmount": null,
+                      "maxAmount": null,
+                      "needsAnotherTool": false,
+                      "nextQuestion": null
+                    }
+
+                    Rules:
+
+                    - Use get_payments for general payment lists.
+                    - Use filter_payments when filters are specified.
+                    - Use get_payment_stats for overall statistics.
+                    - Use get_payment_method_stats for payment-method analysis.
+
+                    - Set needsAnotherTool to true ONLY when another
+                      database operation is required after this tool.
+
+                    - If another tool is required, put the intended
+                      follow-up request in nextQuestion.
+
+                    - Otherwise set needsAnotherTool to false
+                      and nextQuestion to null.
+
+                    Conversation history:
+                    %s
+
+                    Current user question:
+                    %s
+                    """.formatted(
+                    conversationHistory,
+                    question
+            );
+
+            String response =
+                    ollama.generate(prompt);
+
+            ToolCall firstTool =
+                    mapper.readValue(
+                            response,
+                            ToolCall.class
+                    );
+
+            Object firstResult =
+                    executor.execute(
+                            firstTool.getTool(),
+                            firstTool.getStatus(),
+                            firstTool.getPaymentMethod(),
+                            firstTool.getMinAmount(),
+                            firstTool.getMaxAmount()
+                    );
+
+            String firstResultJson =
+                    mapper.writeValueAsString(
+                            firstResult
+                    );
+
+
+            String finalData =
+                    firstResultJson;
+
+            if (firstTool.isNeedsAnotherTool()
+                    && firstTool.getNextQuestion() != null
+                    && !firstTool.getNextQuestion().isBlank()) {
+
+                String secondPrompt = """
+                        You are continuing a payment analysis.
+
+                        The user originally asked:
+
+                        %s
+
+                        The first tool returned:
+
+                        %s
+
+                        The next required operation is:
+
+                        %s
+
+                        Choose the correct payment tool.
+
+                        Return ONLY valid JSON.
+
+                        JSON format:
+
+                        {
+                          "tool": "filter_payments",
+                          "status": null,
+                          "paymentMethod": null,
+                          "minAmount": null,
+                          "maxAmount": null,
+                          "needsAnotherTool": false,
+                          "nextQuestion": null
+                        }
+                        """.formatted(
+                        question,
+                        firstResultJson,
+                        firstTool.getNextQuestion()
+                );
+
+                String secondResponse =
+                        ollama.generate(secondPrompt);
+
+                ToolCall secondTool =
+                        mapper.readValue(
+                                secondResponse,
+                                ToolCall.class
+                        );
+
+                Object secondResult =
+                        executor.execute(
+                                secondTool.getTool(),
+                                secondTool.getStatus(),
+                                secondTool.getPaymentMethod(),
+                                secondTool.getMinAmount(),
+                                secondTool.getMaxAmount()
+                        );
+
+                finalData =
+                        mapper.writeValueAsString(
+                                secondResult
+                        );
+            }
+
+            conversationHistory +=
+                    "User: " + question + "\n" +
+                    "Result: " + finalData + "\n";
+
 
             String answerPrompt = """
                     You are an AI Payment Operations Agent.
 
-                    Answer the user's question using ONLY the payment data
-                    provided below.
+                    Answer the user's question using ONLY
+                    the payment data provided below.
 
                     IMPORTANT:
-                    - The payment data below is authoritative.
-                    - Do NOT claim the data is empty if records are present.
-                    - Do NOT invent any payments.
-                    - Do NOT ignore the payment data.
-                    - If there are matching payments, summarize them.
+
+                    - The data is authoritative.
+                    - Never invent payments.
+                    - Never invent statistics.
+                    - Never claim data is empty when records exist.
                     - Calculate totals when useful.
                     - Be concise.
                     - Return plain text only.
-
-                    Conversation history:
-                    %s
 
                     User question:
                     %s
@@ -121,11 +209,11 @@ public class PaymentAgent {
                     Payment data:
                     %s
 
-                    Now answer the user's question using the payment data.
+                    Answer the user's question directly.
                     """.formatted(
-                    conversationHistory,
                     question,
-                    resultJson);
+                    finalData
+            );
 
             return ollama.generate(answerPrompt);
 
@@ -133,7 +221,8 @@ public class PaymentAgent {
 
             throw new RuntimeException(
                     "Failed to communicate with Ollama",
-                    e);
+                    e
+            );
 
         } catch (InterruptedException e) {
 
@@ -141,9 +230,8 @@ public class PaymentAgent {
 
             throw new RuntimeException(
                     "Ollama request was interrupted",
-                    e);
+                    e
+            );
         }
-
     }
-
 }
