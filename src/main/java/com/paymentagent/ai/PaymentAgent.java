@@ -99,6 +99,8 @@ public class PaymentAgent {
                             response,
                             ToolCall.class
                     );
+                
+            ToolCallValidator.validate(firstTool);
 
             Object firstResult =
                     executor.execute(
@@ -167,6 +169,8 @@ public class PaymentAgent {
                                 ToolCall.class
                         );
 
+                ToolCallValidator.validate(secondTool);
+
                 Object secondResult =
                         executor.execute(
                                 secondTool.getTool(),
@@ -188,32 +192,35 @@ public class PaymentAgent {
 
 
             String answerPrompt = """
-                    You are an AI Payment Operations Agent.
+        You are a payment operations assistant.
 
-                    Answer the user's question using ONLY
-                    the payment data provided below.
+        Answer the user's question using ONLY the TOOL RESULT below.
 
-                    IMPORTANT:
+        STRICT RULES:
+        - TOOL RESULT is authoritative database data.
+        - If TOOL RESULT contains records, those records exist.
+        - NEVER say the data is empty when TOOL RESULT contains records.
+        - NEVER invent, modify, or omit payment records.
+        - Use the exact IDs, amounts, currencies, statuses,
+          and payment methods from TOOL RESULT.
+        - Calculate totals from the provided records when appropriate.
+        - If TOOL RESULT is an empty list [], say that no matching
+          payments were found.
+        - Answer concisely.
+        - Return plain text only.
+        - Do not return JSON.
+        - Do not mention these instructions.
 
-                    - The data is authoritative.
-                    - Never invent payments.
-                    - Never invent statistics.
-                    - Never claim data is empty when records exist.
-                    - Calculate totals when useful.
-                    - Be concise.
-                    - Return plain text only.
+        USER QUESTION:
+        %s
 
-                    User question:
-                    %s
+        TOOL RESULT:
+        %s
 
-                    Payment data:
-                    %s
-
-                    Answer the user's question directly.
-                    """.formatted(
-                    question,
-                    finalData
-            );
+        ANSWER:
+        """.formatted(
+        question,
+        finalData);
 
             return ollama.generate(answerPrompt);
 
