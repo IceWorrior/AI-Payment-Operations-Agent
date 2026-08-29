@@ -1,1 +1,25 @@
-Compile.md
+# Maven
+target/
+
+# Java
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+
+# Environment / secrets
+.env
+.env.*

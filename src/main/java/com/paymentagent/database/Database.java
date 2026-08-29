@@ -7,16 +7,28 @@ import java.sql.SQLException;
 public class Database {
 
     private static final String URL =
-            "jdbc:postgresql://localhost:5432/payment_agent";
+            System.getenv().getOrDefault(
+                    "DATABASE_URL",
+                    "jdbc:postgresql://localhost:5432/payment_agent"
+            );
 
     private static final String USER =
-            "payment_user";
+            System.getenv().getOrDefault(
+                    "DATABASE_USER",
+                    "payment_user"
+            );
 
     private static final String PASSWORD =
-            "payment123";
+            System.getenv("DATABASE_PASSWORD");
 
     public static Connection getConnection()
             throws SQLException {
+
+        if (PASSWORD == null || PASSWORD.isBlank()) {
+            throw new IllegalStateException(
+                    "DATABASE_PASSWORD environment variable is not set"
+            );
+        }
 
         return DriverManager.getConnection(
                 URL,

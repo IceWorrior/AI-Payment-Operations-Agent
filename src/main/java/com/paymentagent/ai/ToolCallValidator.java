@@ -23,6 +23,7 @@ public class ToolCallValidator {
             case "get_payments":
             case "get_payment_stats":
             case "get_payment_method_stats":
+            case "analyze_payment_risk":
                 break;
             
             case "filter_payments":

@@ -51,6 +51,11 @@ public class PaymentAgent {
                     get_payment_method_stats
                     - Get statistics grouped by payment method.
 
+                    analyze_payment_risk
+                    - Analyze the overall payment risk.
+                    - Use this when the user asks about payment risk,
+                    suspicious activity, or whether the payment system is risky.
+
                     Return ONLY valid JSON.
 
                     JSON format:
@@ -71,6 +76,9 @@ public class PaymentAgent {
                     - Use filter_payments when filters are specified.
                     - Use get_payment_stats for overall statistics.
                     - Use get_payment_method_stats for payment-method analysis.
+                    - Use get_payment_method_stats when the user asks to compare or analyze payment methods.
+                    - Use analyze_payment_risk when the user asks about payment risk, suspicious activity, or overall payment risk.
+                    - Use null for filters that were not specified.
 
                     - Set needsAnotherTool to true ONLY when another
                       database operation is required after this tool.
