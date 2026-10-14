@@ -1,0 +1,4 @@
+classpath:/home/saksham/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.20.0/jackson-databind-2.20.0.jar	1688471:1756422039000
+classpath:/home/saksham/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.20/jackson-annotations-2.20.jar	79195:1756421461000
+classpath:/home/saksham/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.20.0/jackson-core-2.20.0.jar	593063:1756421750000
+classpath:/home/saksham/.m2/repository/org/postgresql/postgresql/42.7.7/postgresql-42.7.7.jar	1098916:1749635711000
